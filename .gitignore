@@ -1,0 +1,6 @@
+*.out
+*.exe
+*.obj
+.vscode
+boc
+boc_init
