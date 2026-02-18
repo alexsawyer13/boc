@@ -18,6 +18,7 @@
 
 #define MAX_SOURCES 1024
 #define MAX_LIBS 1024
+#define MAX_LIB_DIRS 1024
 #define MAX_INCLUDES 1024
 #define MAX_EXECS 128
 
@@ -49,6 +50,9 @@ typedef struct boc_exec
 
     const char *libs[MAX_LIBS];
     int lib_count;
+
+    const char *lib_dirs[MAX_LIB_DIRS];
+    int lib_dir_count;
 } boc_exec;
 
 typedef struct boc
@@ -75,6 +79,7 @@ int _boc_compile_boc_c();
 void boc_add_exec(const char *path);
 void boc_add_src(const char *path);
 void boc_add_lib(const char *name);
+void boc_add_lib_dir(const char *path);
 void boc_add_include(const char *path);
 
 void boc_flag_debug_symbols();
@@ -211,12 +216,19 @@ void _boc_build_linux()
         }
 
         // Add include directories
-        
         printf("\tIncludes:\n");
         for (int j = 0; j < e->include_count; j++)
         {
             printf("\t\t%s\n", e->includes[j]);
             boc_stringbuilder_push(&sb, " -I\"%s\"", e->includes[j]);
+        }
+
+		// Add library include paths
+        printf("\tLibrary include paths:\n");
+        for (int j = 0; j < e->lib_dir_count; j++)
+        {
+            printf("\t\t%s\n", e->lib_dirs[j]);
+            boc_stringbuilder_push(&sb, " -L\"%s\"", e->lib_dirs[j]);
         }
 
         // Add libraries
@@ -308,7 +320,7 @@ void boc_add_lib(const char *name)
 {
     boc *b = &_BOC_INTERNAL_BOC_STRUCT;
 
-    BOC_ASSERT(name, "path is null");
+    BOC_ASSERT(name, "name is null");
 
     BOC_ASSERT(b->current_exec >= 0, "No current executable");
     BOC_ASSERT(b->current_exec < b->exec_count, "Exec out of bounds");
@@ -318,6 +330,22 @@ void boc_add_lib(const char *name)
 
     e->libs[e->lib_count] = name;
     e->lib_count++;
+}
+
+void boc_add_lib_dir(const char *path)
+{
+    boc *b = &_BOC_INTERNAL_BOC_STRUCT;
+
+    BOC_ASSERT(path, "path is null");
+
+    BOC_ASSERT(b->current_exec >= 0, "No current executable");
+    BOC_ASSERT(b->current_exec < b->exec_count, "Exec out of bounds");
+    boc_exec *e = &b->execs[b->current_exec];
+    
+    BOC_ASSERT(e->lib_dir_count < MAX_SOURCES, "Reached maximum number of lib dirs!\n");
+
+    e->lib_dirs[e->lib_dir_count] = path;
+    e->lib_dir_count++;
 }
 
 void boc_add_include(const char *path)
