@@ -64,6 +64,7 @@ typedef struct boc
     int wall;
     int wextra;
     int werror;
+	int sanitise_addresses;
 
     boc_exec execs[MAX_EXECS];
     int exec_count;
@@ -86,6 +87,7 @@ void boc_flag_debug_symbols();
 void boc_flag_wall();
 void boc_flag_wextra();
 void boc_flag_werror();
+void boc_flag_sanitise_addresses();
 
 void boc_dry_run();
 
@@ -261,6 +263,11 @@ void _boc_build_linux()
             printf("\t\t-Werror Warnings are errors\n");
             boc_stringbuilder_push(&sb, " -Werror");
         }
+		if (b->sanitise_addresses)
+		{
+			printf("\t\t-fsanitize=addreses");
+			boc_stringbuilder_push(&sb, " -fsanitize=address");
+		}
 
         // Execute (and print) command
 
@@ -386,6 +393,12 @@ void boc_flag_werror()
 {
     boc *b = &_BOC_INTERNAL_BOC_STRUCT;
     b->werror = 1;
+}
+
+void boc_flag_sanitise_addresses()
+{
+	boc *b = &_BOC_INTERNAL_BOC_STRUCT;
+	b->sanitise_addresses = 1;
 }
 
 void boc_dry_run()
